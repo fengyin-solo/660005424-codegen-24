@@ -5,19 +5,11 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
 import { useLogStore } from '../store/log'
+import { heatmapOption } from './chartOptions'
 const store = useLogStore(); const chart = ref<HTMLDivElement>(); let inst: echarts.ECharts|null=null
 function update() {
   if (!inst||!store.result) return
-  const ws = store.result.windows; const levels = ['INFO','WARN','ERROR','DEBUG']
-  const data: [number,number,number][] = []
-  ws.forEach((w,i) => { levels.forEach((lv,j) => { data.push([i,j,w.levels[lv]||0]) }) })
-  inst.setOption({
-    backgroundColor:'transparent',grid:{left:60,right:15,top:5,bottom:25},
-    xAxis:{type:'category',data:ws.map((_,i)=>'W'+i),axisLabel:{color:'#94a3b8',fontSize:8}},
-    yAxis:{type:'category',data:levels,axisLabel:{color:'#94a3b8',fontSize:9}},
-    visualMap:{min:0,max:Math.max(...data.map(d=>d[2]),1),inRange:{color:['#1e293b','#fef08a','#ef4444']},calculable:false,show:false},
-    series:[{type:'heatmap',data,label:{show:true,fontSize:8,color:'#94a3b8'}}],animation:false
-  })
+  inst.setOption(heatmapOption(store.result.windows), true)
 }
 onMounted(()=>{if(chart.value){inst=echarts.init(chart.value);update()}})
 watch(()=>store.result,update)
