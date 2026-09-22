@@ -1,6 +1,6 @@
 <template>
-  <div class="panel">
-    <h4>🚨 告警列表</h4>
+  <div class="panel" :class="{ 'auto-height': autoHeight }">
+    <h4>🚨 {{ title }}</h4>
     <div v-if="!alerts.length" class="empty">暂无告警</div>
     <div v-for="a in alerts.slice(0,8)" :key="a.id" class="alert-row" :class="a.severity">
       <span class="a-sev" :class="a.severity">{{ a.severity.toUpperCase() }}</span>
@@ -12,12 +12,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useLogStore } from '../store/log'
+import type { Alert } from '@/types'
+const props = withDefaults(defineProps<{
+  title?: string
+  alerts?: Alert[] | null
+  /** 大屏模式下由外部网格决定高度，不再追加顶部间距 */
+  autoHeight?: boolean
+}>(), { title: '告警列表', alerts: null, autoHeight: false })
 const store = useLogStore()
-const alerts = computed(() => store.result?.alerts || [])
+const alerts = computed(() => props.alerts ?? store.result?.alerts ?? [])
 </script>
 
 <style scoped>
 .panel{background:#1e293b;border-radius:8px;padding:12px;border:1px solid #334155;margin-top:12px}
+.panel.auto-height{margin-top:0;height:100%;overflow:auto}
 .panel h4{color:#f87171;font-size:13px;margin-bottom:8px}
 .empty{color:#64748b;font-size:12px}
 .alert-row{display:flex;gap:8px;padding:4px 6px;margin:2px 0;border-radius:4px;font-size:11px;align-items:flex-start}

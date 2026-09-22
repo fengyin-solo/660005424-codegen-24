@@ -9,6 +9,8 @@
         <el-input v-model="store.searchQuery" placeholder="搜索关键词..." size="small" style="width:200px" clearable/>
         <el-button size="small" @click="store.generate()" :loading="store.loading">🔍 生成日志</el-button>
         <el-button size="small" type="warning" @click="store.detect()" :disabled="!store.result">⚠ 检测异常</el-button>
+        <el-button size="small" type="info" @click="permVisible = true">🔑 授权管理</el-button>
+        <el-button size="small" type="success" @click="enterScreen">🖥 进入大屏</el-button>
       </div>
     </header>
     <div class="main-grid">
@@ -24,17 +26,33 @@
       <TrendChart />
       <HeatmapChart />
     </div>
+    <BigScreen v-if="screenVisible" @exit="screenVisible = false"/>
+    <PermissionDialog v-model:visible="permVisible"/>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import LogTable from './components/LogTable.vue'
 import AnomalyChart from './components/AnomalyChart.vue'
 import AlertPanel from './components/AlertPanel.vue'
 import TrendChart from './components/TrendChart.vue'
 import HeatmapChart from './components/HeatmapChart.vue'
+import BigScreen from './components/BigScreen.vue'
+import PermissionDialog from './components/PermissionDialog.vue'
 import { useLogStore } from './store/log'
+import { useScreenStore } from './store/screen'
 const store = useLogStore()
+const screenStore = useScreenStore()
+const screenVisible = ref(false)
+const permVisible = ref(false)
+async function enterScreen() {
+  await Promise.all([screenStore.loadCatalog(), screenStore.loadAccounts()])
+  if (!screenStore.currentAccount && screenStore.accounts.length) {
+    await screenStore.selectAccount(screenStore.accounts[0].account)
+  }
+  screenVisible.value = true
+}
 </script>
 
 <style>
